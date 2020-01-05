@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title>加载3D 模型</title>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+
+	<body>
+		<script src="../build/three.js"></script>
+		<!--常用模型加载插件-->
+		<script src="js/loaders/DDSLoader.js"></script>
+		<script src="js/loaders/MTLLoader.js"></script>
+		<script src="js/loaders/OBJLoader.js"></script>
+		<!--添加控制器-->
+		<script src="js/controls/OrbitControls.js"></script>
+
+		<script src="js/libs/stats.min.js"></script>
+
+		<script>
+			let container, stats, controls;
+
+			let camera, scene, renderer, light;
+		
+			let model;
+
+			init()
+
+			animate()
+
+			function init() {
+
+				container = document.createElement('div');
+				document.body.appendChild(container);
+
+				renderer = new THREE.WebGLRenderer({
+					antialias: true
+				});
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.shadowMap.enabled = true; //渲染器接收阴影渲染
+				container.appendChild(renderer.domElement);
+				
+				
+
+				window.addEventListener('resize', onWindowResize, false); //窗口大小变化后，针对当前窗口大小比例渲染
+
+				// stats
+				stats = new Stats();
+				container.appendChild(stats.dom); //添加一个fps测速器
+
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+				camera.position.set(0, 220, 460); //相机位置
+
+				controls = new THREE.OrbitControls(camera); //添加控制器 //设置控制器。方便操控3d世界。
+				controls.target.set(0, 100, 0);//设置控制器控制中心点
+				controls.update();//控制器更新
+
+				scene = new THREE.Scene(); //创建场景
+				scene.background = new THREE.Color(0x383634);//设置场景背景色
+				scene.fog = new THREE.Fog(0xa0a0a0, 600, 5000); //场景加入雾化，200 - 1000的距离衰变雾化
+
+				light = new THREE.HemisphereLight(0xffffff, 0x444444); //半球光源，颜色从天空颜色渐变为地面颜色。
+				light.position.set(0, 200, 0);
+				scene.add(light); //				这光不能用于投射阴影。
+
+				var path = './img/';
+				var format = '.jpg';
+				envMap = new THREE.CubeTextureLoader().load([
+					path + 'xp' + format, path + 'xn' + format,
+					path + 'yp' + format, path + 'yn' + format,
+					path + 'zp' + format, path + 'zn' + format
+				]);//这儿共需要6张图啊，分别是上下左右前后，你懂的
+	
+				scene.background = envMap//设置场景的天空盒子，这样看上去整个场景更加逼真
+				
+				light = new THREE.DirectionalLight(0xffffff,.5); //平行光,类似于太阳光
+				light.position.set(0, 200, 100);
+				light.castShadow = true; //投射动态阴影,默认false,比较耗性能
+				
+				
+				//设置相机渲染面积
+				light.shadow.camera.top = 180; //从光线的角度来看其他物体背后的物体将处于阴影之中（计算内部阴影）,平行光是平行的所以 相机为OrthographicCamera相机
+				light.shadow.camera.bottom = -100;
+				light.shadow.camera.left = -120;
+				light.shadow.camera.right = 120;
+				//设置阴影细腻度 长*宽
+				light.shadow.mapSize.width = 4096; // default
+				light.shadow.mapSize.height = 4096; // default
+				scene.add(light);
+
+				// 创建地面
+
+				let mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2000, 2000), new THREE.MeshPhongMaterial({
+					color: 0x383634
+
+				}));
+				mesh.rotation.x = -Math.PI / 2;
+				mesh.receiveShadow = true; //地面接收阴影 
+				scene.add(mesh)
+
+				loadModel()
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight; //相机视锥体的长宽比
+				camera.updateProjectionMatrix(); //更新相机投影矩阵
+
+				renderer.setSize(window.innerWidth, window.innerHeight); //渲染器大小
+
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame(animate);
+
+				renderer.render(scene, camera);
+
+				stats.update(); //fps插件更新s
+			
+			}
+
+			function loadModel() {
+				
+				THREE.Loader.Handlers.add(/\.dds$/i, new THREE.DDSLoader());
+
+				new THREE.MTLLoader()
+					.setPath('./Gift_Box_V3/')
+					.load('Gift_Box_V3.mtl', function(materials) {
+						//正常的obj系列模型，是这样的，obj+mtl+xx.jpg贴图。
+						//缺一不可，网上很多都缺少mtl，原因是因为建模师导出模型的时候没设置好参数。
+						//当3者都有的时候，如果渲染出来，还是看不见模型，
+						//有2种情况，模型太大了，或者模型太小了，你都会看不见的，只需要对模型进行缩放下。160行，重置缩放比例
+						//如果渲染出来的模型，没有贴图，黑的，那么你可以移步到mtl里面看看，直接用txt都能打开的格式，
+						//看看里面有贴图路径没有。xx.jpg。如果没有也不会渲染出来，如果路径xxx.jpg前面带有路径全部删掉。不需要路径。
+						
+						materials.preload();//材质贴图上
+						new THREE.OBJLoader()
+							.setMaterials(materials)
+							.setPath('./Gift_Box_V3/')
+							.load('Gift_Box_V3.obj', function(object) {
+								let sc = 10
+								object.traverse(function(child) {
+									//对模型体内的每个几何体进行遍历
+									if(child.isMesh) {
+
+										child.castShadow = true;//允许模型本身对自己产生阴影
+										child.receiveShadow = true;//接受阴影渲染
+										child.scale.set(sc, sc, sc)//模型重置比例放大。
+
+									}
+
+								}); //模型光照处理
+								model = object
+								model.position.y+=10
+								model.rotation.x=-Math.PI/180*90
+								
+								scene.add(model);
+							});
+
+					});
+			}
+
+		</script>
+	</body>
+
+</html>

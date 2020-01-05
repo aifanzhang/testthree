@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>初始着色器</title>
+		<script type="text/javascript" src="js/three.js"></script>
+			<!--添加控制器-->
+		<script src="js/controls/OrbitControls.js"></script>
+		<style>
+			body {
+				margin: 0;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+
+	<body>
+
+
+	
+		<div id="container">
+		</div>
+		<!--ModelViewMatrix:模型矩阵 
+		ProjectionMatrix:投影矩阵-->
+		<script id="vertexShader" type="x-shader/x-vertex">
+
+			varying vec2 vUv;
+
+			void main()
+			{
+				vUv = uv;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				gl_Position = projectionMatrix * mvPosition;
+			}
+
+		</script>
+		<script id="fragmentShader" type="x-shader/x-fragment">
+		varying vec2 vUv;	
+		uniform vec2 u_resolution;
+		uniform vec2 u_mouse;
+		uniform float u_time;
+		
+		float plot(vec2 st, float pct){
+			//用Smoothstep——平滑阶梯函数，进行平滑过渡颜色处理。你可以改改值如0.02。
+		  return  smoothstep( pct-0.02, pct, st.y) -
+		          smoothstep( pct, pct+0.02, st.y);
+		}
+		
+		void main() {
+			vec2 position = - 1.0 + 2.0 * vUv;//这儿很关键对，进行矩阵变换，将坐标与颜色值一一对应映射
+			//	gl_FragCoord.xy/u_resolution;    gl_FragCoord.xy代表屏幕的xy坐标。除以2维坐标，等于我们的颜色所要映射到的坐标
+			
+			
+		     vec2 st = position;
+		
+		    float y = pow(st.x,3.0);//3次冥的曲线，你可以试一试2次冥曲线坐标
+		
+		    vec3 color = vec3(y);
+		
+		    float pct = plot(st,y);//
+		    color = (1.0-pct)*color+pct*vec3(0.0,1.0,0.0);//对应坐标值赋上绿色
+		
+		    gl_FragColor = vec4(color,1.0);//输出颜色值
+		}
+		
+		//以上就是着色器基础，对于webgl中级或者初级来说，目前不具备自己写想要的着色器的能力的。总而言之不现实。但是。。。。
+		//我们得有自己的着色器库，以及怎么用啊。这就不一样了、后面的例子都是直接copy使用即可的。
+		</script>
+
+		
+		<script type="text/javascript">
+			var container;
+			var camera, scene, renderer,mesh;
+			var uniforms;
+
+			init();
+			animate();
+
+			function init() {
+				container = document.getElementById('container');
+	
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+				camera.position.set(100,250,80)
+			
+				scene = new THREE.Scene();
+				let c = new THREE.OrbitControls(camera)//设置控制器。方便操控3d世界。
+				c.update()
+				var geometry = new THREE.BoxBufferGeometry( 50,50,50 );
+
+				uniforms = {
+					u_time: {
+						type: "f",
+						value: 1.0
+					},
+					u_resolution: {
+						type: "v2",
+						value: new THREE.Vector2()
+					}
+				};
+
+				var material = new THREE.ShaderMaterial({
+					uniforms: uniforms,
+					vertexShader: document.getElementById('vertexShader').textContent,
+					fragmentShader: document.getElementById('fragmentShader').textContent
+				});
+
+				mesh = new THREE.Mesh(geometry, material);
+				var cloneM = mesh.clone()
+				scene.add(mesh);
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setClearColor(0xfefefe)
+				container.appendChild(renderer.domElement);
+
+				onWindowResize();
+				window.addEventListener('resize', onWindowResize, false);
+			}
+
+			function onWindowResize(event) {
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				uniforms.u_resolution.value.x = renderer.domElement.width;
+				uniforms.u_resolution.value.y = renderer.domElement.height;
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				render();
+			}
+			function render() {
+				uniforms.u_time.value += .1;
+			//	mesh.rotation.y+=0.1
+				renderer.render(scene, camera);
+			}
+//			setTimeout(()=>{
+//				alert('哇，好炫酷啊，您将学这个')
+//				
+//				
+//				alert('滚吧。你怎么可能学得会，关了吧')
+//			},5000)
+			
+			
+		</script>
+	</body>

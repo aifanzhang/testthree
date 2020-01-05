@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>threejs三大组件</title>
+		<script src="../build/three.js"></script>
+	</head>
+	<body>
+	<!--	threejs的API很长，有很多概念和术语，理解了这些概念和术语，才能更好的使用threejs。下图简单整理了一下这些概念：-->
+	
+	<!--
+	第一组件
+	相机
+	
+	第二组件
+	渲染器
+	
+	第三组件
+	scene
+	
+	场景用来容纳图形元素。场景相当于宇宙，而图形元素就是星星，图形元素只有添加到场景中，其坐标、大小等才有意义。
+	相机的作用是定义可视域，即确定哪些图形元素是可见的。
+	渲染器则负责用如何渲染出图像，是使用WegGL还是Canvas。
+	-->
+	
+	
+	<canvas id="cc"></canvas>
+	
+	
+	
+<script type="text/javascript">
+
+  
+
+        // 创建一个场景，它将保存我们所有的元素，如物体、照相机和灯光。
+        var scene = new THREE.Scene();
+
+        // 创建一个摄像机，它定义了我们所处的位置.
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // 创建渲染并设置大小 指定渲染canvas对象
+        var renderer = new THREE.WebGLRenderer({canvas: document.querySelector("#cc")});
+
+        renderer.setClearColor(0xEEEEEE);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+		
+		//创建一个xyz坐标轴，方便初学者理解三维坐标
+        var axes = new THREE.AxisHelper( 20 );
+        scene.add(axes);
+
+        // 创建地面
+        var planeGeometry = new THREE.PlaneGeometry(60,20,1,1);
+        var planeMaterial = new THREE.MeshBasicMaterial({color: 0xcccccc});
+        var plane = new THREE.Mesh(planeGeometry,planeMaterial);
+
+
+        // 地面默认是垂直的。所以需要旋转一下地面。
+        plane.rotation.x=-0.5*Math.PI;
+        plane.position.x=15
+        plane.position.y=0
+        plane.position.z=0
+
+        // 地面添加到场景里面去
+        scene.add(plane);
+
+        // 创建一个立方体
+        var cubeGeometry = new THREE.CubeGeometry(4,4,4);
+        var cubeMaterial = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true});
+        var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+
+
+        // 设置立方体坐标位置
+        cube.position.x=-4;
+        cube.position.y=3;
+        cube.position.z=0;
+
+         // 立方体放入场景
+        scene.add(cube);
+		
+		
+		 // 创建一个球体
+        var sphereGeometry = new THREE.SphereGeometry(4,20,20);
+        var sphereMaterial = new THREE.MeshBasicMaterial({color: 0x7777ff, wireframe: true});
+        var sphere = new THREE.Mesh(sphereGeometry,sphereMaterial);
+
+        //设置球体坐标位置
+        sphere.position.x=20;
+        sphere.position.y=4;
+        sphere.position.z=2;
+
+
+         // 球体放入场景
+        scene.add(sphere);
+
+      	//设置相机位置
+        camera.position.x = -30;
+        camera.position.y = 40;
+        camera.position.z = 30;
+        camera.lookAt(scene.position);
+
+    
+
+        // 执行一次渲染器，GPU渲染成图像，绘制到canvas里面呈现
+        renderer.render(scene, camera);
+
+
+
+</script>
+	</body>
+</html>

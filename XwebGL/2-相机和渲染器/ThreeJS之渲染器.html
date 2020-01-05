@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>threejs基本图形之渲染器</title>
+		<script src="../build/three.js"></script>
+	</head>
+
+	<body>
+		<!--	
+			渲染器
+			
+			使用WebGL来渲染图形，速度较快、
+			WebGL（Web Graphics Library）在 GPU 中运行。因此需要使用能够在 GPU 上运行的代码。
+			这样的代码需要提供成对的方法（其中一个叫顶点着色器， 另一个叫片段着色器），
+			并且使用一种类 C/C++ 的强类型语言 GLSL（OpenGL Shading Language)。每一对方法组合起来称为一个 program（着色程序）
+			
+			
+			因此，对于刚入门的开发者来说，直接使用 WebGL 来绘制并拼装出几何体是不现实的。但我们可以在了解 WebGL 的基础知识后，再通过 Three.js 这类封装后的库来现实我们的需求。
+			所以我们详解一下three的渲染器中最常用的 ---WebGLRenderer---的参数作用，等等。
+		-->
+
+		<!--
+		
+	
+	
+	-->
+
+		<canvas id="cc"></canvas>
+
+		<script type="text/javascript">
+			// 创建一个场景，它将保存我们所有的元素，如物体、照相机和灯光。
+			var scene = new THREE.Scene();
+
+			// 创建一个摄像机，它定义了我们所处的位置.
+			var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+			// 创建渲染并设置大小 指定渲染canvas对象
+			var renderer = new THREE.WebGLRenderer({
+				canvas: document.querySelector("#cc"),//渲染器绘制其输出的画布，
+				alpha:false,// 画布是否包含alpha（透明度）缓冲区。默认值为false。
+				premultipliedAlpha:true,//渲染器是否会假设颜色具有 预乘alpha。默认为true。
+				antialias:true,//是否执行抗锯齿。默认值为false。
+				preserveDrawingBuffer:true,//是否保留缓冲区直到手动清除或覆盖。默认值为false。
+				depth:true,//绘图缓冲区是否具有至少16位的 深度缓冲区。默认为true。
+				autoClear:true,//定义渲染器是否应在渲染帧之前自动清除其输出。
+				
+				//以上为基础配置选项。
+				
+				//以下为高级进阶调渲染后期
+				gammaFactor:2,//伽马基础值
+				gammaInput:true,//如果设置，那么它期望所有纹理和颜色都是预乘伽马。默认值为false。
+				gammaOutput:true,//如果设置，那么它期望所有纹理和颜色需要以预乘伽马输出。默认值为false。
+				
+				
+				shadowMap:null,//如果使用，它包含阴影贴图的引用。
+				
+				
+				physicalCorrectLights:true,//是否使用物理上正确的照明模式。默认值为false。
+				toneMapping:1,//曝光值
+				toneMappingExposure:1,//色调映射的曝光级别。默认值为1。
+				renderLists:[],//在内部用于处理场景对象渲染的排序
+				sortObjects:true,//定义渲染器是否应对对象进行排序。默认为true。
+			});
+		
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.shadowMap.enabled = true,//如果设置，请在场景中使用阴影贴图。默认值为false。
+			renderer.shadowMap.autoUpdate = true,//启用场景中阴影的自动更新。默认为true。
+			renderer.shadowMap.needsUpdate  = true,//设置为true时，场景中的阴影贴图将在下一个渲染调用中更新。默认值为false。
+			renderer.shadowMap.type = THREE.BasicShadowMap;//THREE.BasicShadowMap，THREE.PCFShadowMap（默认），THREE.PCFSoftShadowMap
+
+			//创建一个xyz坐标轴，方便初学者理解三维坐标
+			var axes = new THREE.AxesHelper(20);
+			scene.add(axes);
+
+			//创建网格模型
+			
+			var sphereGeometry = new THREE.CubeGeometry(10, 20, 20);//我们就创建个立方体。
+			var material = new THREE.MeshBasicMaterial  ({color:Math.random()*0xffffff})//基础材质
+			var cube = new THREE.Mesh(sphereGeometry,material)
+			
+			scene.add(cube)
+			
+			
+			//我们的网格模型就搞成了。
+
+		
+			//设置相机位置
+			camera.position.x = -30;
+			camera.position.y = 40;
+			camera.position.z = 30;
+			camera.lookAt(scene.position);
+
+			// 执行一次渲染器，GPU渲染成图像，绘制到canvas里面呈现
+			
+			const draw = function(){
+				requestAnimationFrame(draw)//不断绘制
+				renderer.render(scene, camera);//渲染
+				
+				cube.rotation.y+=0.01//网格模型旋转
+			}
+			draw()
+		</script>
+	</body>
+
+</html>

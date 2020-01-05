@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>会变色的着色器</title>
+		<script src="../build/three.js"></script>
+				<!--添加控制器-->
+		<script src="js/controls/OrbitControls.js"></script>
+		
+		<script id="vertexShader" type="x-shader/x-vertex">
+			varying vec2 vUv;
+
+			void main()
+			{
+				vUv = uv;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+					//将模型矩阵初始化，然后再转变为投影矩阵，被剪裁后也就是我们所看见的。
+				gl_Position = projectionMatrix * mvPosition;
+					//存储坐标位置的地方
+			}
+	
+
+		</script>
+		
+		
+	
+		
+		<script id="fragmentShader" type="x-shader/x-fragment">
+			uniform float u_time; //创建一个改变颜色的变量, 注意请与81行的对象key值相同，在draw函数里面获取不到
+
+			void main() {
+				
+				gl_FragColor = vec4(abs(sin(u_time)),0.2,0.6,1.0);
+				//sin(), cos(), tan(), asin(), acos(), atan(), pow(), exp(), log(), sqrt(), abs(), sign(), floor(), ceil(), fract(), mod(), min(), max() 和 clamp()。这些运动方式随便玩
+			}
+	      
+	     </script>
+      	<!--
+      	shader 语言 有一个 main 函数，会在最后返回颜色值。这点和 C 语言很像。
+
+		最终的像素颜色取决于预设的全局变量 gl_FragColor。
+		
+		这个类 C 语言有内建的变量（像gl_FragColor），函数和数据类型。在本例中我们刚刚介绍了vec4（四分量浮点向量）。
+		之后我们会见到更多的类型，像 vec3 （三分量浮点向量）和 vec2 （二分量浮点向量），还有非常著名的：float（单精度浮点型）， int（整型） 和 bool（布尔型）。
+		
+		如果我们仔细观察 vec4 类型，可以推测这四个变元分别响应红，绿，蓝和透明度通道。同时我们也可以看到这些变量是规范化的，意思是它们的值是从0到1的。之后我们会学习如何规范化变量，使得在变量间map（映射）数值更加容易。
+		-->
+	</head>
+
+	<body>
+	
+
+		<canvas id="cc"></canvas>
+
+		<script type="text/javascript">
+			// 创建一个场景，它将保存我们所有的元素，如物体、照相机和灯光。
+			var scene = new THREE.Scene();
+
+			// 创建一个摄像机，它定义了我们所处的位置.
+			var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+			// 创建渲染并设置大小 指定渲染canvas对象
+			var renderer = new THREE.WebGLRenderer({
+				canvas: document.querySelector("#cc")
+			});
+
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			//创建一个xyz坐标轴，方便初学者理解三维坐标
+			var axes = new THREE.AxesHelper(20);
+			scene.add(axes);
+			let c = new THREE.OrbitControls(camera,document.querySelector("#cc"))//设置控制器。方便操控3d世界。
+			c.update()
+			var group = new THREE.Group()
+			scene.add(group)
+			//创建网格模型
+			var uniforms = {
+			
+					u_time: { value: 1.0 },
+					resolution: { value: new THREE.Vector2() }
+			
+				}
+			var cubeGeometry = new THREE.CubeGeometry(10, 20, 20);//我们就创建个立方体。
+			var material  = new THREE.ShaderMaterial( {
+			
+				uniforms: uniforms,
+			
+				vertexShader: document.getElementById( 'vertexShader' ).textContent,//拿去顶点着色器里面的数据
+			
+				fragmentShader: document.getElementById( 'fragmentShader' ).textContent//拿去片段着色器里面的数据
+			
+			} );
+			
+			
+			var cube = new THREE.Mesh(cubeGeometry,material)
+			cube.position.z = 10
+			group.add(cube)
+
+			
+			//我们的网格模型就搞成了。
+
+		
+			//设置相机位置
+
+			camera.position.set(-0,80,0)//我们将x,z值设我0，y值一个 高度，我们将是以俯视的角度观看场景。
+			camera.lookAt(scene.position);
+
+			// 执行一次渲染器，GPU渲染成图像，绘制到canvas里面呈现
+			
+			let detils = 1//增量
+			let Rs = 10//半径
+			const draw = function(){
+				uniforms.u_time.value+=0.1
+				requestAnimationFrame(draw)//不断绘制
+				renderer.render(scene, camera);//渲染
+			
+				group.rotation.y+=0.01//网格模型旋转
+			}
+			draw()
+		</script>
+	</body>
+
+</html>

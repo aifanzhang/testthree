@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>ThreeJS之拖拽详解</title>
+		<script src="../build/three.js"></script>
+		<!--拖拽插件-->
+		<script src="js/controls/DragControls.js"></script>
+		<!--相机控制器插件-->
+		<script src="js/controls/TrackballControls.js"></script>
+	</head>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+		}
+	</style>
+
+	<body>
+
+		<canvas id="cc">
+			
+		</canvas>
+
+		<script>
+			var renderer = new THREE.WebGLRenderer({
+				canvas: document.querySelector("#cc")
+			})
+			renderer.setClearColor(0xADD8E6)
+			renderer.antialias = true
+			renderer.setSize(window.innerWidth, window.innerHeight)
+
+			var scene = new THREE.Scene()
+
+			var Bplace = []//将需要拖拽的对象放入数组里面
+
+
+			var group = new THREE.Group()
+			scene.add(group)//创建一个group。你可以把这个对象看成是dom对象里面的div。这对象还能继续放object3D类
+
+			var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000)
+			camera.position.set(40, 200, 100)
+			camera.lookAt(new THREE.Vector3(0, 0, 0))
+
+			var controls = new THREE.TrackballControls(camera, document.querySelector("#cc"))
+
+			var light = new THREE.DirectionalLight(0xfefefe)
+			light.position.set(50, 50, 80)
+
+			scene.add(light)
+
+			var cubeGe = new THREE.IcosahedronGeometry(10, 1)
+			var cubeM = new THREE.MeshPhongMaterial({
+				color: 0xfff236,
+				wireframe: false
+			})
+
+			var ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshLambertMaterial({
+				color: 0xfefefe
+			}))
+			ground.rotation.x = -Math.PI / 180 * 90
+			ground.position.y -= 10
+			var cube = new THREE.Mesh(cubeGe, cubeM)
+			Bplace.push(ground)
+
+			var dragControls = new THREE.DragControls(Bplace, camera, renderer.domElement);//创建drag拖拽对象。值分别为，拖拽对象数组，控制相机，拖拽的dom对象
+			dragControls.addEventListener('dragstart', function(event) {
+				controls.enabled = false;
+				console.log('开始拖拽')
+				//在此处可以判断是否拖拽到里面了。
+			});
+			dragControls.addEventListener('dragend', function(event) {
+				controls.enabled = true;
+				console.log('拖拽结束')
+				//在此处可以判断是否拖拽到里面了。
+				
+			});
+			
+			ground.add(cube)
+			group.add(ground)
+
+			draw()
+
+			function draw() {
+				requestAnimationFrame(draw)
+				camera.lookAt(cube.position)//相机一直看着cube的位置（可以看成聚焦
+				
+				controls.update()
+
+				renderer.render(scene, camera)
+			}
+
+		
+		</script>
+	</body>
+
+</html>

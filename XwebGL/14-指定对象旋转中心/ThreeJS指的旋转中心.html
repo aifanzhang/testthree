@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>threejs指定物体旋转中心</title>
+		<script src="../build/three.js"></script>
+				<!--添加控制器-->
+		<script src="js/controls/OrbitControls.js"></script>
+	</head>
+
+	<body>
+	
+
+		<canvas id="cc"></canvas>
+
+		<script type="text/javascript">
+			// 创建一个场景，它将保存我们所有的元素，如物体、照相机和灯光。
+			var scene = new THREE.Scene();
+
+			// 创建一个摄像机，它定义了我们所处的位置.
+			var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+			// 创建渲染并设置大小 指定渲染canvas对象
+			var renderer = new THREE.WebGLRenderer({
+				canvas: document.querySelector("#cc")
+			});
+
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			//创建一个xyz坐标轴，方便初学者理解三维坐标
+			var axes = new THREE.AxesHelper(20);
+			scene.add(axes);
+			let c = new THREE.OrbitControls(camera,document.querySelector("#cc"))//设置控制器。方便操控3d世界。
+			c.update()
+			var group = new THREE.Group()
+			scene.add(group)//父亲容器
+			//创建网格模型
+			
+			var cubeGeometry = new THREE.CubeGeometry(10, 20, 20);//我们就创建个立方体。
+			var material = new THREE.MeshBasicMaterial  ({color:Math.random()*0xffffff})//基础材质
+			var cube = new THREE.Mesh(cubeGeometry,material)
+			cube.position.z = 10
+			group.add(cube)
+			
+			var cube2 = cube.clone()
+			cube2.material = new THREE.MeshBasicMaterial  ({color:Math.random()*0xffffff})//基础材质
+			
+			cube2.scale.set(.1,.1,.1)//将cube2进行缩放0.1倍，xyz方向等值缩放
+			
+			
+			cube2.position.set(5,10,30)
+			group.add(cube2)
+			
+			//我们的网格模型就搞成了。
+
+		
+			//设置相机位置
+//			camera.position.x = -30;
+//			camera.position.y = 40;
+//			camera.position.z = 30;
+			camera.position.set(-0,80,0)//我们将x,z值设我0，y值一个 高度，我们将是以俯视的角度观看场景。
+			camera.lookAt(scene.position);
+
+			// 执行一次渲染器，GPU渲染成图像，绘制到canvas里面呈现
+			
+			//我们再来给cube2进行来一个sin运动
+			let detils = 1//增量
+			let Rs = 10//半径
+			const draw = function(){
+				detils++
+				requestAnimationFrame(draw)//不断绘制
+				renderer.render(scene, camera);//渲染
+				cube2.position.z = Math.sin(Math.PI/180*detils)*Rs//是不是搞定一个运动很是简单呢。当然你可以尝试下对大量的物体进行该运动方式，波浪等3d效果都是以这种方式实现的
+			//	cube.rotation.y+=0.01//网格模型旋转
+				group.rotation.y+=0.01//网格模型旋转
+			}
+			draw()
+		</script>
+	</body>
+
+</html>

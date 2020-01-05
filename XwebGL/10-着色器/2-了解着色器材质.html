@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>了解着色器材质</title>
+		<!--		顶点着色器
+			类似像C一样的语言
+		-->
+		
+		<!--1	attribute	
+		这个修饰符充当每个顶点数据的顶点着色器和OpenGL ES之间的链接。此顶点着色器属性的值在每次执行时变化
+		2	uniform	
+		这修饰符链接着色器程序及其WebGL的应用程序。不同属性修饰词，(uniforms)的值不会改变。(uniforms)是只读的; 可以用它们与任何基本数据类型来声明一个变量。
+		示例 - 统一 vec4 光的位置;
+		3	varying	
+		这个修饰符形成顶点着色器的内插数据和片段着色器之间的联系。它可用于下列数据类型- float, vec2, vec3, vec4, mat2, mat3, mat4, 或数组。
+		示例 - 改变VEC3正常;-->
+		<script id="vertexShader" type="x-shader/x-vertex">
+			
+			varying vec2 vUv;
+
+			void main()
+			{
+				vUv = uv;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+					//将模型矩阵初始化，然后再转变为投影矩阵，被剪裁后也就是我们所看见的。
+				gl_Position = projectionMatrix * mvPosition;
+					//存储坐标位置的地方
+			}
+
+
+		</script>
+		
+		
+		<!--      	片段着色器
+			类似像C一样的语言
+		-->
+		<script id="fragmentShader" type="x-shader/x-fragment">
+      
+
+      	void main() {
+			gl_FragColor = vec4(1.0,0.0,1.0,1.0);
+			//vec4(r,g,b,a) 存储颜色的地方
+		}
+
+		</script>
+	</head>
+	<body>
+		
+		
+		<script>
+			//这就是本期的主角，着色器材质。
+			var material = new THREE.ShaderMaterial( {
+			
+				uniforms: {
+			
+					time: { value: 1.0 },
+					resolution: { value: new THREE.Vector2() }
+			
+				},
+			
+				vertexShader: document.getElementById( 'vertexShader' ).textContent,//拿去顶点着色器里面的数据
+			
+				fragmentShader: document.getElementById( 'fragmentShader' ).textContent//拿去片段着色器里面的数据
+			
+			} );
+		</script>
+	</body>
+</html>

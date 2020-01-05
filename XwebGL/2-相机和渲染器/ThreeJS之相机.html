@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>threejs之相机</title>
+		<script src="../build/three.js"></script>
+	</head>
+
+	<body>
+		<!--	相机
+		相机定义了场景中哪部分是可以见的，相机有自己的位置（position）、朝向（lookAt）和可视域。我们创建的图形一定要放在相机的可视域中才能看得见。可视域与相机的类型、相机的位置和朝向都有关。
+		-->
+
+		<!--
+		
+		正交相机
+		正交相机拍摄的效果类似设计图，重在表现物体的实际尺寸，没有近小远大的效果：
+		
+		OrthographicCamera( left, right, top, bottom, near, far )
+		
+		
+		
+		透视相机拍摄的效果类似人眼所见，即有近小远大的效果：
+		
+		PerspectiveCamera( fov, aspect, near, far )
+		
+		
+		-->
+
+		<canvas id="cc"></canvas>
+
+		<script type="text/javascript">
+			// 创建一个场景，它将保存我们所有的元素，如物体、照相机和灯光。
+			var scene = new THREE.Scene();
+
+			// 创建一个摄像机，它定义了我们所处的位置.
+			var fov = 45,aspect = window.innerWidth / window.innerHeight,near = 0.1,far = 1000;
+			
+			//fov参数指定视角，aspect指定视图宽高比，后两个参数指定近平面和远平面。透视相机的视域是一个台体：
+			var camera1 = new THREE.PerspectiveCamera(fov, aspect, near, far);//透视相机
+			
+		
+			
+			var frustumSize = 400
+			var aspect = window.innerWidth / window.innerHeight;
+				camera2 = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, .1, 100 );
+				//这个六个参数即是指定视域的左右上下近远六个范围。正交相机的视域是立方体
+				camera2.position.set(30,0,25);
+
+			// 创建渲染并设置大小 指定渲染canvas对象
+			var renderer = new THREE.WebGLRenderer({
+				canvas: document.querySelector("#cc")
+			});
+
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			//创建一个xyz坐标轴，方便初学者理解三维坐标
+			var axes = new THREE.AxesHelper(20);
+			scene.add(axes);
+
+			//创建网格模型
+			
+			var sphereGeometry = new THREE.CubeGeometry(10, 20, 20);//我们就创建个立方体。
+			var material = new THREE.MeshBasicMaterial  ({color:Math.random()*0xffffff})//基础材质
+			var cube = new THREE.Mesh(sphereGeometry,material)
+			
+			scene.add(cube)
+			
+			
+			
+
+		
+			//设置相机位置
+			camera1.position.set(-30,40,30);
+		
+			camera1.lookAt(scene.position);
+			
+	
+
+			// 执行一次渲染器，GPU渲染成图像，绘制到canvas里面呈现
+			
+			const draw = function(){
+				requestAnimationFrame(draw)//不断绘制
+				renderer.render(scene, camera1);//透视相机渲染
+				//renderer.render(scene, camera2);//正交相机渲染
+				
+				cube.rotation.y+=0.01//网格模型旋转
+			}
+			draw()
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>高阶纹理用法</title>
+		<script src="../build/three.js"></script>
+		<script src="js/libs/inflate.min.js"></script>
+		<script src="js/loaders/FBXLoader.js"></script>
+		<script src="js/controls/TrackballControls.js"></script>
+	</head>
+
+	<body>
+
+		<canvas id="cc" width="" height=""></canvas>
+
+		<script>
+			let camera, scene, renderer, width = window.innerWidth,
+				height = window.innerHeight,
+				pX = 0,
+				pY = 30,
+				pZ = 0,
+				ox = 0,//角度值增量
+				box2,//模型clone体
+				box;//模型
+				
+
+			init()
+
+			draw()
+
+			function init() {
+				renderer = new THREE.WebGLRenderer({
+
+					canvas: document.querySelector("#cc"),
+
+					antialias: true,
+
+					alpha: true
+				});
+
+				renderer.setSize(width, height)//设置画布尺寸大小
+
+				renderer.setClearColor(0x3c3d3a)//设置画布颜色
+
+				scene = new THREE.Scene()//创建场景
+
+				camera = new THREE.PerspectiveCamera(60, width / height, 1, 10000)//设置相机
+
+				camera.position.set(pX, pY, pZ)//设置相机位置
+
+				camera.lookAt(new THREE.Vector3(0, 0, 0))//设置相机聚焦点
+
+				c = new THREE.TrackballControls(camera, document.querySelector("#cc"))//设置控制器对象，第一个相机对象，第二控制的dom对象。
+
+
+				let m1 = new THREE.MeshBasicMaterial({
+					side: THREE.DoubleSide,
+					map: createMap('img/1.png', true),
+					opacity: 1,
+					transparent: true,
+					color: 0xff0000
+				});//写好第一种材质
+				let m2 = new THREE.MeshBasicMaterial({
+					side: THREE.DoubleSide,
+					map: createMap('img/2.png', false),
+					opacity: 1,
+					transparent: false
+				});//写好第二种材质
+				//一会混在一起会出现出乎意料的酷炫效果。
+			
+
+				loadM([m1, m2])
+
+			}
+
+			function draw() {
+	
+				renderer.render(scene, camera)
+				
+				ox += 1//增量递增，使运动轨迹成三角函数的方式，有快有慢。从而才能呈现不错的运动感
+				
+				if(box2) box2.material.map.offset.set(Math.sin(Math.PI / 180 * ox), 1);//让clone体的物体材质动起来，是不是很吊，提示，观察img文件内的贴图你会懂很多。
+				
+				c.update()//控制器更新
+
+				requestAnimationFrame(draw)
+			}
+
+			function loadM(mm) {
+				let loader = new THREE.FBXLoader(); //fbx专属加载器
+				loader.load('obj/plane.FBX', function(object) {
+
+					object.traverse(function(child) {
+
+						if(child.isMesh) {
+
+							child.castShadow = true;
+
+							child.receiveShadow = true;
+
+							child.material = mm[0]//使用材质数组中的第一个 m1
+
+							box2 = child.clone()
+							box2.material = mm[1]//使用材质数组中的第二个 m2
+
+						}
+
+					}); //模型光照处理.
+
+
+					box = object
+					
+					scene.add(box2);
+					scene.add(box);
+
+				});
+
+			}
+
+			function createMap(url, C) {
+				var maps = new THREE.TextureLoader().load(url)
+				maps.wrapS = maps.wrapT = THREE.RepeatWrapping;
+				if(C) {
+					maps.repeat.set(16, 16)//纹理 y,x方向重铺16次
+				} else {
+					maps.repeat.set(4, 4)//纹理y,x方向重铺4次
+				}
+
+				maps.needsUpdate = true;//纹理更新
+				return maps//返回对象
+			}
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>threejs之分层渲染</title>
+		<script src="../build/three.js"></script>
+		<!--添加控制器-->
+		<script src="js/controls/OrbitControls.js"></script>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			
+			body {
+				overflow: hidden;
+			}
+			
+			li {
+				margin-left: 10px;
+				border: 1px solid cornflowerblue;
+				border-radius: 90px;
+				width: 90px;
+				height: 90px;
+				text-align: center;
+				line-height: 90px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<ul style="position: fixed; right: 20%; top: 20px; list-style: none; color: #FF0000; display: flex;">
+			<li id="c1">层级1</li>
+			<li id="c2">层级2</li>
+			<li id="c3">层级3</li>
+
+		</ul>
+
+		<canvas id="cc"></canvas>
+
+		<script type="text/javascript">
+			// 创建一个场景，它将保存我们所有的元素，如物体、照相机和灯光。
+			var scene = new THREE.Scene();
+
+			// 创建一个摄像机，它定义了我们所处的位置.
+			var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+			// 创建渲染并设置大小 指定渲染canvas对象
+			var renderer = new THREE.WebGLRenderer({
+				canvas: document.querySelector("#cc")
+			});
+
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			//创建一个xyz坐标轴，方便初学者理解三维坐标
+			var axes = new THREE.AxesHelper(20);
+			scene.add(axes);
+			let c = new THREE.OrbitControls(camera, document.querySelector("#cc")) //设置控制器。方便操控3d世界。
+			c.update()
+			var group = new THREE.Group()
+			scene.add(group)
+			//创建网格模型
+			console.log(scene)
+			var cubeGeometry = new THREE.CubeGeometry(10, 20, 20); //我们就创建个立方体。
+			var material = new THREE.MeshBasicMaterial({
+				color: Math.random() * 0xffffff
+			}) //基础材质
+			var cube = new THREE.Mesh(cubeGeometry, material)
+			cube.position.z = 10
+			group.add(cube)
+
+			var cube2 = cube.clone()
+			cube2.material = new THREE.MeshBasicMaterial({
+				color: Math.random() * 0xffffff
+			}) //基础材质
+
+			//将cube2进行缩放0.1倍，xyz方向等值缩放
+
+			cube2.position.set(12, 0, 0)
+			let cube2_copy = cube2.clone()
+			cube2_copy.scale.set(.5,.5,.2)
+			cube2_copy.position.x+=15
+			cube2.add(cube2_copy)
+			group.add(cube2)
+
+
+			var cube3 = cube.clone()
+			cube3.material = new THREE.MeshBasicMaterial({
+				color: Math.random() * 0xffffff,
+				wireframe: true
+			}) //基础材质
+
+			cube3.position.set(-15, 0, 0)
+			group.add(cube3)
+
+			//层级 Layers 一共可以设置为32个层级。最大限度为32层。方便我们对场景内的东西进行切换。用好了，就是一大神器。
+			//创建一个层级 层级1
+			let layers1 = new THREE.Layers();
+			layers1.set(1); //设置层级顺序
+			cube.layers = layers1;
+			//创建一个层级 层级2
+			let layers2 = new THREE.Layers();
+			layers2.set(2); //设置层级顺序
+			cube2.layers = layers2;
+			cube2_copy.layers = layers2;
+			
+			//创建一个层级 层级3
+			let layers3 = new THREE.Layers();
+			layers3.set(3); //设置层级顺序
+			cube3.layers = layers3;
+
+			let nows = new THREE.Layers();
+			nows.set(1)
+			camera.layers = nows
+			//设置相机位置
+
+			camera.position.set(-0, 80, 0) //我们将x,z值设我0，y值一个 高度，我们将是以俯视的角度观看场景。
+			camera.lookAt(scene.position);
+
+			// 执行一次渲染器，GPU渲染成图像，绘制到canvas里面呈现
+
+			const draw = function() {
+				requestAnimationFrame(draw) //不断绘制
+				renderer.render(scene, camera); //渲染
+				group.rotation.y += 0.01 //网格模型旋转
+			}
+			draw()
+			
+			const domClick = function() {
+				//这样的话，我们对3个层级进行切换就是轻轻松松咯，大大优化了性能
+				
+				document.querySelector("#c1").addEventListener('click',()=>{
+					nows.set(1)
+					camera.layers = nows
+				})
+				document.querySelector("#c2").addEventListener('click',()=>{
+					nows.set(2)
+					camera.layers = nows
+				})
+				document.querySelector("#c3").addEventListener('click',()=>{
+					nows.set(3)
+					camera.layers = nows
+				})
+			}
+			domClick()
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>threejs之渲染剔除</title>
+		<script src="js/three.js"></script>
+		<!--添加控制器-->
+		<script src="js/controls/OrbitControls.js"></script>
+	</head>
+
+	<body>
+
+		<canvas id="cc"></canvas>
+
+		<script type="text/javascript">
+			// 创建一个场景，它将保存我们所有的元素，如物体、照相机和灯光。
+			//本课程作为了解部分。最新96版本已经没有渲染剔除了。
+			let camera, scene, renderer;
+			let width = window.innerWidth,
+				height = window.innerHeight;
+
+			function init() {
+				scene = new THREE.Scene();
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+				camera.position.z = 300;
+				camera.lookAt(new THREE.Vector3(0, 0, 0));
+				scene.add(camera);
+				renderer = new THREE.WebGLRenderer({
+					antialias: true
+				});
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.setClearColor(0xffffff);
+				renderer.setFaceCulling(THREE.CullFaceFront, THREE.FrontFaceDirectionCW);//该版本为84版本。最新96已经没有该方法了
+				document.body.appendChild(renderer.domElement);
+
+				let c = new THREE.OrbitControls(camera, document.querySelector("#cc")) //设置控制器。方便操控3d世界。
+				c.update()
+			}
+
+			function createShapes() {
+				createShapeList();
+			}
+
+			function render() {
+				requestAnimationFrame(render);
+				mesh.rotation.y += 0.01;
+				renderer.render(scene, camera);
+			}
+
+			function run() {
+				init();
+				createShapes();
+				render();
+			}
+
+			run();
+
+			function createShapeList() {
+				let geometry = new THREE.BoxGeometry(100, 100, 100);
+				let materials = [
+					new THREE.MeshBasicMaterial({
+						color: 0x0ff00*Math.random()
+					}),
+					new THREE.MeshBasicMaterial({
+						color: 0x0ff00*Math.random()
+					}),
+					new THREE.MeshBasicMaterial({
+						color: 0x0ff00*Math.random()
+					}),
+					new THREE.MeshBasicMaterial({
+						color: 0x0ff00*Math.random()
+					}),
+					new THREE.MeshBasicMaterial({
+						color: 0x0ff00*Math.random()
+					}),
+					new THREE.MeshBasicMaterial({
+						color: 0x0ff00*Math.random()
+					})
+				];
+				let material = new THREE.MultiMaterial(materials);//该版本为84版本。最新96已经没有该方法了，新版本的材质可以直接为数组。如 = [xxxmaterial,xxxmaterial,xxxmaterial]
+				mesh = new THREE.Mesh(geometry, material);
+				mesh.rotation.x = THREE.Math.degToRad(45);
+				scene.add(mesh);
+			}
+		</script>
+	</body>
+
+</html>

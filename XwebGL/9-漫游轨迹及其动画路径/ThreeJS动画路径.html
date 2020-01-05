@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>ThreeJS之动画运动路径</title>
+		<script src="../build/three.js"></script>
+		<!--添加控制器-->
+		<script src="js/controls/OrbitControls.js"></script>
+	</head>
+
+	<body>
+		<script>
+			let camera, scene, renderer,cube;
+			let width = window.innerWidth,
+				height = window.innerHeight;
+
+			function init() {
+				scene = new THREE.Scene();
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+				camera.position.z = 300;
+				camera.lookAt(new THREE.Vector3(0, 0, 0));
+				scene.add(camera);
+				renderer = new THREE.WebGLRenderer({
+					antialias: true
+				});
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.setClearColor(0xffffff);
+				document.body.appendChild(renderer.domElement);
+				
+				var axes = new THREE.AxesHelper(20);
+				scene.add(axes);
+				
+				
+				controls = new THREE.OrbitControls(camera); //添加控制器 //设置控制器。方便操控3d世界。
+			
+				controls.update();//控制器更新
+				
+				
+				var path = './img/';
+				var format = '.jpg';
+				envMap = new THREE.CubeTextureLoader().load([
+					path + 'xp' + format, path + 'xn' + format,
+					path + 'yp' + format, path + 'yn' + format,
+					path + 'zp' + format, path + 'zn' + format
+				]);
+	
+				scene.background = envMap//设置场景的天空盒子，这样看上去整个场景更加逼真
+				
+				var  cubeGeometry = new THREE.CubeGeometry(2, 2, 2);//我们就创建个立方体。
+				var material = new THREE.MeshBasicMaterial  ({color:Math.random()*0xffffff})//基础材质
+				 cube = new THREE.Mesh(cubeGeometry,material)
+					
+				scene.add(cube)
+
+			}
+
+			function createShapes() {
+				let geometry = new THREE.SphereGeometry(120, 32, 32);
+				let material = new THREE.PointsMaterial({
+					color: 0xff0000
+				});
+				mesh = new THREE.Points(geometry, material);//创建点对象
+				scene.add(mesh);
+			}
+
+			function render() {
+				requestAnimationFrame(render);
+				moveCamera();//物体移动
+				renderer.render(scene, camera);
+			}
+
+			function run() {
+				init();
+				createShapes();//创建形状以及 创建轨迹线
+				createPath();//创建路径
+				render();//渲染
+			}
+
+			run();
+
+			/*********************************/
+			function createPath() {
+				path = new THREE.Path();//创建一个轨迹  ，2D路径表示。该类提供了创建2D形状的路径和轮廓的方法
+				path.moveTo(0, 0);
+				path.bezierCurveTo(10, 100, 20, -30, 30, 19);//cp1X：Float，cp1Y：Float，cp2X：Float，cp2Y：Float，x：Float，y：Float）  其中（cp1X，cp1Y）和（cp2X，cp2Y）作为控制点  x,y作为中间点
+				path.bezierCurveTo(40, -5, 50, 150, 60, -39);//cp1X：Float，cp1Y：Float，cp2X：Float，cp2Y：Float，x：Float，y：Float）  其中（cp1X，cp1Y）和（cp2X，cp2Y）作为控制点  x,y作为中间点
+				path.closePath();//路径闭合
+				
+				
+				var geometry = new THREE.BufferGeometry().setFromPoints( path.getPoints() );
+				var material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+			
+				var line = new THREE.Line( geometry, material );//创建一条线，并使用该轨迹的点
+				scene.add( line );
+				
+				
+				return path;
+			}
+
+			var progress = 0;
+			var pZ = 0;
+			
+			function moveCamera() {
+				
+				progress += 0.002;//增量  也就是说将该线端，按照1/500的比例进行分割。也就是说有500个坐标点
+
+				let point = path.getPointAt(progress);//从路径中拿取坐标点点
+				if(point) {
+					
+					cube.position.set(point.x, point.y,pZ);//使用拿取到的坐标点，作为cube的坐标值。这样不断更新点，cube变开始移动拉
+					
+				} else {
+					
+					progress = 0;//当拿取不到点的时候，也就是说明点500个点以及拿取完毕，从第一个继续开始拿，就出现循环运动了。
+					
+				}
+
+			}
+		</script>
+	</body>
+
+</html>

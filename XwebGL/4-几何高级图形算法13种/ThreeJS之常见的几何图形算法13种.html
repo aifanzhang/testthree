@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>ThreeJS之常见几何高级图形算法13种</title>
+		<script src="../build/three.js"></script>
+	</head>
+
+	<body>
+		<script>
+			/**
+			 * 求直线的斜率
+			 * @param x1 起点x坐标
+			 * @param y1 起点y坐标
+			 * @param x2 终点x坐标
+			 * @param y2 终点y坐标
+			 * @returns {Number} 直线的斜率
+			 */
+			function getSlopeOfLine(x1, y1, x2, y2) {
+				let ox = x2 - x1,
+					oy = y2 - y1;
+				let sign = ox > 0 ? 1 : -1;
+				if(Math.abs(ox - 0) < 0.001) { //直线与x轴垂直
+					return sign * Number.MAX_VALUE;
+				} else if(Math.abs(oy - 0) < 0.001) { //直线与x轴平行
+					return 0;
+				} else { //其它情况
+					return oy / ox;
+				}
+			}
+
+			/**
+			 * 计算线段与圆的交点
+			 * @param x1 直线的点P1的x坐标
+			 * @param y1 直线的点P1的y坐标
+			 * @param x2 直线的点P2的x坐标
+			 * @param y2 直线的点P2的y坐标
+			 * @param cx 圆心位置C的x坐标
+			 * @param cy 圆心位置C的y坐标
+			 * @param r 圆的半径
+			 *  @param segment 将P1P2视为线段还是直线，true是线段，false是直线，默认是true
+			 * @returns {{x1: Number, y1: Number, x2: Number, y2: Number，length: Number}} 返回交点坐标，length指出交点的个数
+			 */
+			function intersection(x1, y1, x2, y2, cx, cy, r, segment) {
+				/*
+				  算法参考链接：http://mathworld.wolfram.com/Circle-LineIntersection.html
+				 */
+				/*
+				保存原有数据，并将设置直线偏移（原因是下面的算法中的圆的圆心是在原点的）
+				 */
+				let ox1 = x1,
+					ox2 = x2,
+					oy1 = y1,
+					oy2 = y2;
+				x1 -= cx;
+				y1 -= cy;
+				x2 -= cx;
+				y2 -= cy;
+				/*
+				计算交点
+				 */
+				let dx = x2 - x1,
+					dy = y2 - y1,
+					dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2)),
+					D = x1 * y2 - x2 * y1,
+					sign = dy > 0 ? 1 : -1;
+				let theta = Math.sqrt(r * r * dr * dr - D * D);
+				let ix1 = (D * dy - sign * dx * theta) / (dr * dr);
+				let iy1 = (-D * dy - Math.abs(dy) * theta) / (dr * dr);
+				let ix2 = (D * dy + sign * dx * theta) / (dr * dr);
+				let iy2 = (-D * dy + Math.abs(dy) * theta) / (dr * dr);
+				let rx1 = cx + ix1,
+					ry1 = cy + iy1,
+					rx2 = cx + ix2,
+					ry2 = cy + iy2;
+				/*
+				检查交点是否线段上
+				 */
+				let flag1, flag2;
+				segment = segment === false ? false : true;
+				if(segment) {
+					flag1 = ox1 < ox2 ? (rx1 >= ox1 && rx1 <= ox2) : (rx1 <= ox1 && rx1 >= ox2);
+					flag1 = flag1 && (oy1 < oy2 ? (ry1 >= oy1 && ry1 <= oy2) : (ry1 <= oy1 && ry1 >= oy2));
+					flag2 = ox1 < ox2 ? (rx2 >= ox1 && rx2 <= ox2) : (rx2 <= ox1 && rx2 >= ox2);
+					flag2 = flag2 && (oy1 < oy2 ? (ry2 >= oy1 && ry2 <= oy2) : (ry2 <= oy1 && ry2 >= oy2));
+				} else {
+					flag1 = flag2 = true;
+				}
+				let length = (flag1 ? 1 : 0) + (flag2 ? 1 : 0);
+				return {
+					x1: flag1 ? rx1 : undefined,
+					y1: flag1 ? ry1 : undefined,
+					x2: flag2 ? rx2 : undefined,
+					y2: flag2 ? ry2 : undefined,
+					length: length
+				};
+			}
+
+			/**
+			 * 计算线段的长度
+			 * @param x1 起点x坐标
+			 * @param y1 起点y坐标
+			 * @param x2 终点x坐标
+			 * @param y2 终点y坐标
+			 * @returns {Number} 线段的长度
+			 */
+		function lengthOfLine(x1, y1, x2, y2) {
+				let ox = Math.pow((x2 - x1), 2);
+				let oy = Math.pow((y2 - y1), 2);
+				return Math.sqrt(ox + oy);
+			}
+
+			//		判断折线是否在多边形内：
+			//
+			//　　只要判断折线的每条线段是否都在多边形内即可。设折线有m条线段，多边形有n个顶点，则该算法的时间复杂度为O(m*n)。
+			//
+			//　　判断多边形是否在多边形内：
+			//
+			//　　只要判断多边形的每条边是否都在多边形内即可。判断一个有m个顶点的多边形是否在一个有n个顶点的多边形内复杂度为O(m*n)。
+			//
+			//　　判断矩形是否在多边形内：
+			//
+			//　　将矩形转化为多边形，然后再判断是否在多边形内。
+			//
+			//　　判断圆是否在多边形内：
+			//
+			//　　只要计算圆心到多边形的每条边的最短距离，如果该距离大于等于圆半径则该圆在多边形内。计算圆心到多边形每条边最短距离的算法在后文阐述。
+			//
+			//　　判断点是否在圆内：
+			//
+			//　　计算圆心到该点的距离，如果小于等于半径则该点在圆内。
+			//
+			//　　判断线段、折线、矩形、多边形是否在圆内：
+			//
+			//　　因为圆是凸集，所以只要判断是否每个顶点都在圆内即可。
+			//
+			//　　判断圆是否在圆内：
+			//
+			//　　设两圆为O1,O2，半径分别为r1, r2，要判断O2是否在O1内。先比较r1，r2的大小，如果r1<r2则O2不可能在O1内；否则如果两圆心的距离大于r1 - r2 ，则O2不在O1内；否则O2在O1内。
+			//
+			//　　计算点到线段的最近点：
+			//
+			//　　如果该线段平行于X轴（Y轴），则过点point作该线段所在直线的垂线，垂足很容易求得，然后计算出垂足，如果垂足在线段上则返回垂足，否则返回离垂足近的端点；如果该线段不平行于X轴也不平行于Y轴，则斜率存在且不为0。设线段的两端点为pt1和pt2，斜率为：k = ( pt2.y - pt1. y ) / (pt2.x - pt1.x );该直线方程为：y = k* ( x - pt1.x) + pt1.y。其垂线的斜率为 - 1 / k，垂线方程为：y = (-1/k) * (x - point.x) + point.y 。
+			//
+			//　　联立两直线方程解得：x = ( k^2 * pt1.x + k * (point.y - pt1.y ) + point.x ) / ( k^2 + 1) ，y = k * ( x - pt1.x) + pt1.y;然后再判断垂足是否在线段上，如果在线段上则返回垂足；如果不在则计算两端点到垂足的距离，选择距离垂足较近的端点返回。
+			//
+			//　　计算点到折线、矩形、多边形的最近点：
+			//
+			//　　只要分别计算点到每条线段的最近点，记录最近距离，取其中最近距离最小的点即可。
+			//
+			//　　计算点到圆的最近距离及交点坐标：
+			//
+			//　　如果该点在圆心，因为圆心到圆周任一点的距离相等，返回UNDEFINED。
+			//
+			//　　连接点P和圆心O，如果PO平行于X轴，则根据P在O的左边还是右边计算出最近点的横坐标为centerPoint.x - radius 或 centerPoint.x + radius。如果PO平行于Y轴，则根据P在O的上边还是下边计算出最近点的纵坐标为 centerPoint.y -+radius或 centerPoint.y - radius。如果PO不平行于X轴和Y轴，则PO的斜率存在且不为0，这时直线PO斜率为k = （ P.y - O.y ）/ ( P.x - O.x )。直线PO的方程为：y = k * ( x - P.x) + P.y。设圆方程为:(x - O.x ) ^2 + ( y - O.y ) ^2 = r ^2，联立两方程组可以解出直线PO和圆的交点，取其中离P点较近的交点即可。
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>threejs之常见几何形状使用</title>
+		<script src="../build/three.js"></script>
+	</head>
+
+	<body>
+		<!--	
+			常见的几何形状有
+			BoxGeometry、CircleGeometry、ConeGeometry、CylinderGeometry、DodecahedronGeometry、EdgesGeometry、ExtrudeGeometry、IcosahedronGeometry、LatheGeometry、OctahedronGeometry、
+			
+			【Geometry。。。换为。。。BufferGeometry（如BoxGeometry——BoxBufferGeometry）。性能更优，渲染更快。
+			BufferGeometry 会缓存网格模型，性能要高效点。网格模型生成原理
+			
+			区别如下
+			1、Geometry 生成的模型是这样的 （代码）-> (CUP 进行数据处理，转化成虚拟3D数据) -> (GPU 进行数据组装，转化成像素点，准备渲染) -> 显示器
+			第二次操作时重复走这些流程。
+			
+			2、BufferGeometry 生成模型流程 (代码) -> (CUP 进行数据处理，转化成虚拟3D数据) -> (GPU 进行数据组装，转化成像素点，准备渲染) -> (丢入缓存区) -> 显示器
+			第二次修改时，通过API直接修改缓存区数据，流程就变成了这样
+			(代码) -> (CUP 进行数据处理，转化成虚拟3D数据) -> (修改缓存区数据) -> 显示器
+		-->
+
+		<!--
+		
+	
+	
+	-->
+
+		<canvas id="cc"></canvas>
+
+		<script type="text/javascript">
+			// 创建一个场景，它将保存我们所有的元素，如物体、照相机和灯光。
+			var scene = new THREE.Scene();
+
+			// 创建一个摄像机，它定义了我们所处的位置.
+			var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+			// 创建渲染并设置大小 指定渲染canvas对象
+			var renderer = new THREE.WebGLRenderer({
+				canvas: document.querySelector("#cc")
+				
+			});
+
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			//创建一个xyz坐标轴，方便初学者理解三维坐标
+			var axes = new THREE.AxesHelper(20);
+			scene.add(axes);
+
+			//创建网格模型
+			
+			var ConeGeometry = new THREE.DodecahedronBufferGeometry(10, 2);//我们就创建个立方体。
+			var material = new THREE.MeshBasicMaterial  ({color:Math.random()*0xffffff})//基础材质
+			var Cone = new THREE.Mesh(ConeGeometry,material)
+			
+			
+			var wire = Cone.clone()
+			wire.material = new THREE.MeshPhongMaterial({wireframe :true,depthTest:false})//depthTest解决共面冲突，不妨试试为true看看是什么效果呢
+			scene.add(Cone)
+			scene.add(wire)
+			
+			
+			//我们的网格模型就搞成了。
+
+		
+			//设置相机位置
+			camera.position.x = -30;
+			camera.position.y = 40;
+			camera.position.z = 30;
+			camera.lookAt(scene.position);
+
+			// 执行一次渲染器，GPU渲染成图像，绘制到canvas里面呈现
+			
+			const draw = function(){
+				requestAnimationFrame(draw)//不断绘制
+				renderer.render(scene, camera);//渲染
+				
+				Cone.rotation.y+=0.01//网格模型旋转
+				wire.rotation.y+=0.01//线框模型旋转
+			}
+			draw()
+		</script>
+	</body>
+
+</html>

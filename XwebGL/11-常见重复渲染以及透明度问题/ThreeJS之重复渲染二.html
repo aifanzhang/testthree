@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>ThreeJS之重复渲染</title>
+		<script src="../build/three.js"></script>
+	</head>
+
+	<body>
+	
+		<canvas id="cc"></canvas>
+
+		<script type="text/javascript">
+			// 创建一个场景，它将保存我们所有的元素，如物体、照相机和灯光。
+			var scene = new THREE.Scene();
+
+			// 创建一个摄像机，它定义了我们所处的位置.
+			var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+			// 创建渲染并设置大小 指定渲染canvas对象
+			var renderer = new THREE.WebGLRenderer({
+				canvas: document.querySelector("#cc")
+			});
+
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			//创建一个xyz坐标轴，方便初学者理解三维坐标
+			var axes = new THREE.AxesHelper(20);
+			scene.add(axes);
+
+			//创建网格模型
+			
+			var sphereGeometry = new THREE.PlaneGeometry(10, 20, 20);//我们就创建个立方体。
+			var material = new THREE.MeshBasicMaterial({color:Math.random()*0xffffff,side:THREE.DoubleSide})//基础材质
+			//添加depthTest：false便可解共面决冲突  new THREE.MeshBasicMaterial({color:Math.random()*0xffffff，depthTest：false})
+			//或者将cube clone体的z坐标值加一个很小的值
+			var cube = new THREE.Mesh(sphereGeometry,material)
+			
+			var cube2 = cube.clone()
+			cube2.material = new THREE.MeshBasicMaterial({color:Math.random()*0xffffff})//基础材质
+			cube2.position.z +=0.02
+			scene.add(cube)
+			scene.add(cube2)
+			
+			
+			//我们的网格模型就搞成了。
+
+		
+			//设置相机位置
+			camera.position.x = -30;
+			camera.position.y = 40;
+			camera.position.z = 30;
+			camera.lookAt(scene.position);
+
+			// 执行一次渲染器，GPU渲染成图像，绘制到canvas里面呈现
+			
+			const draw = function(){
+				requestAnimationFrame(draw)//不断绘制
+				renderer.render(scene, camera);//渲染
+				
+				cube.position.y+=0.01//网格模型旋转
+
+			}
+			draw()
+		</script>
+	</body>
+
+</html>

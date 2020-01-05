@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>着色器三</title>
+		<script type="text/javascript" src="js/three.js"></script>
+			<!--添加控制器-->
+		<script src="js/controls/OrbitControls.js"></script>
+		<style>
+			body {
+				margin: 0;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+
+	<body>
+		这是一个直接使用着色器库的例子
+		
+		<div id="container">
+		</div>
+		<!--ModelViewMatrix:模型矩阵 
+		ProjectionMatrix:投影矩阵-->
+		<script id="vertexShader" type="x-shader/x-vertex">
+
+			varying vec2 vUv;
+
+			void main()
+			{
+				vUv = uv;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				gl_Position = projectionMatrix * mvPosition;
+			}
+
+		</script>
+		<script id="fragmentShader" type="x-shader/x-fragment">
+		varying vec2 vUv;	
+		uniform vec2 u_resolution;
+		uniform vec2 u_mouse;
+		uniform float u_time;
+		
+		vec2 random2( vec2 p ) {
+		    return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
+		}
+		
+		void main() {
+			vec2 position = - 1.0 + 2.0 * vUv;
+		    vec2 st = position;
+		    st.x *= u_resolution.x/u_resolution.y;
+		    vec3 color = vec3(.0);
+		
+		    // Scale
+		    st *= 3.;
+		
+		    // Tile the space
+		    vec2 i_st = floor(st);
+		    vec2 f_st = fract(st);
+		
+		    float m_dist = 1.;  // minimun distance
+		
+		    for (int y= -1; y <= 1; y++) {
+		        for (int x= -1; x <= 1; x++) {
+		            // Neighbor place in the grid
+		            vec2 neighbor = vec2(float(x),float(y));
+		
+		            // Random position from current + neighbor place in the grid
+		            vec2 point = random2(i_st + neighbor);
+		
+					// Animate the point
+		            point = 0.5 + 0.5*sin(u_time + 6.2831*point);
+		
+					// Vector between the pixel and the point
+		            vec2 diff = neighbor + point - f_st;
+		
+		            // Distance to the point
+		            float dist = length(diff);
+		
+		            // Keep the closer distance
+		            m_dist = min(m_dist, dist);
+		        }
+		    }
+		
+		    // Draw the min distance (distance field)
+		    color += m_dist;
+		
+		    // Draw cell center
+		    color += 1.-step(.002, m_dist);
+		
+		    // Draw grid
+		  //  color.r += step(.98, f_st.x) + step(.98, f_st.y);
+		
+		    // Show isolines
+		    // color -= step(.7,abs(sin(27.0*m_dist)))*.5;
+		
+		    gl_FragColor = vec4(color,1.0);
+		}
+		</script>
+
+		
+		<script type="text/javascript">
+			var container;
+			var camera, scene, renderer,mesh;
+			var uniforms;
+
+			init();
+			animate();
+
+			function init() {
+				container = document.getElementById('container');
+	
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+				camera.position.set(100,250,80)
+			
+				scene = new THREE.Scene();
+				let c = new THREE.OrbitControls(camera)//设置控制器。方便操控3d世界。
+				c.update()
+				var geometry = new THREE.BoxBufferGeometry( 50,50,50 );
+
+				uniforms = {
+					u_time: {
+						type: "f",
+						value: 1.0
+					},
+					u_resolution: {
+						type: "v2",
+						value: new THREE.Vector2()
+					}
+				};
+
+				var material = new THREE.ShaderMaterial({
+					uniforms: uniforms,
+					vertexShader: document.getElementById('vertexShader').textContent,
+					fragmentShader: document.getElementById('fragmentShader').textContent
+				});
+
+				mesh = new THREE.Mesh(geometry, material);
+				var cloneM = mesh.clone()
+				scene.add(mesh);
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setClearColor(0xfefefe)
+				container.appendChild(renderer.domElement);
+
+				onWindowResize();
+				window.addEventListener('resize', onWindowResize, false);
+			}
+
+			function onWindowResize(event) {
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				uniforms.u_resolution.value.x = renderer.domElement.width;
+				uniforms.u_resolution.value.y = renderer.domElement.height;
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				render();
+			}
+			function render() {
+				uniforms.u_time.value += .1;
+			//	mesh.rotation.y+=0.1
+				renderer.render(scene, camera);
+			}
+//			setTimeout(()=>{
+//				alert('哇，好炫酷啊，您将学这个')
+//				
+//				
+//				alert('滚吧。你怎么可能学得会，关了吧')
+//			},5000)
+			
+			
+		</script>
+	</body>

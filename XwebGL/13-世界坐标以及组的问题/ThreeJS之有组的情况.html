@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>threejs之有组情况</title>
+		<script src="../build/three.js"></script>
+	</head>
+
+	<body>
+		<!--	
+			这是three.js中大多数对象的基类，并提供了一组用于处理3D空间中对象的属性和方法。
+	
+			请注意，这可以用于通过.add（object）方法对对象进行分组，该方法将对象添加为子对象，但最好为此使用Group。
+		-->
+
+
+
+		<canvas id="cc"></canvas>
+
+		<script type="text/javascript">
+			// 创建一个场景，它将保存我们所有的元素，如物体、照相机和灯光。
+			var scene = new THREE.Scene();
+
+			// 创建一个摄像机，它定义了我们所处的位置.
+			var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+			// 创建渲染并设置大小 指定渲染canvas对象
+			var renderer = new THREE.WebGLRenderer({
+				canvas: document.querySelector("#cc")
+			});
+
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			//创建一个xyz坐标轴，方便初学者理解三维坐标
+			var axes = new THREE.AxesHelper(20);
+			scene.add(axes);
+			
+			var group = new THREE.Group()//object3d的存储器，可以存放大量的3d对象，---对我们需要操作的3d对象，操作少的，我就可以放这里。
+			scene.add(group)
+			//创建网格模型
+			
+			var sphereGeometry = new THREE.CubeGeometry(10, 20, 20);//我们就创建个立方体。
+			var material = new THREE.MeshBasicMaterial  ({color:Math.random()*0xffffff})//基础材质
+			var cube = new THREE.Mesh(sphereGeometry,material)
+			
+			group.add(cube)
+			
+			var cube2 = cube.clone()
+			cube2.material = new THREE.MeshBasicMaterial  ({color:Math.random()*0xffffff})//基础材质
+			
+			cube2.scale.set(.1,.1,.1)
+			
+			
+			cube2.position.set(5,10,10)
+			group.add(cube2)
+			
+			//我们的网格模型就搞成了。
+
+		
+			//设置相机位置
+//			camera.position.x = -30;
+//			camera.position.y = 40;
+//			camera.position.z = 30;
+			camera.position.set(-30,40,30)
+			camera.lookAt(scene.position);
+
+			// 执行一次渲染器，GPU渲染成图像，绘制到canvas里面呈现
+			
+			const draw = function(){
+				requestAnimationFrame(draw)//不断绘制
+				renderer.render(scene, camera);//渲染
+				
+			//	cube.rotation.y+=0.01//网格模型旋转
+				group.rotation.y+=0.01//网格模型旋转
+			}
+			draw()
+		</script>
+	</body>
+
+</html>
